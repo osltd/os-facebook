@@ -10,7 +10,4 @@ router.get('/healthcheck', (req, res) => res.status(200).json({
     messages : [`no problemo.`]
 }));
 
-// TMP
-router.get('/configs', (req, res) => res.status(200).json(process.env));
-
 module.exports = router;
