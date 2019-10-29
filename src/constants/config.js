@@ -27,8 +27,8 @@ module.exports = {
     multipleStatements : true
   },
   S3 : {
-    accessKeyId     : e.S3_ID,
-    secretAccessKey : e.S3_KEY,
+    accessKeyId     : e.S3_ACCESS_ID,
+    secretAccessKey : e.S3_ACCESS_KEY,
     region          : "ap-southeast-1",
     httpOptions: {
       timeout: 1800000
