@@ -129,7 +129,6 @@ router.post('/release', jsonParser, function(req, res) {
             var url = data.article.sections[0].medias[0].url;
             // extract extension
             var extension = (url.split('?').shift() || '').split('.').pop();
-            console.log("====> extension: ", extension);
             // image?
             if(!/mov|mpeg4|mp4|avi|wmv|mpegps|flv|3gpp|webm|dnxhr|prores|cineform|hevc|qt/i.test(extension)){
                 // set type
@@ -168,7 +167,6 @@ router.post('/release', jsonParser, function(req, res) {
             // set publish time
             feedConf.scheduled_publish_time = new Date(data.article.time).getTime() / 1000;
         }
-        console.log(feedConf, data.type);
         // save feed conf
         data.feedConf = feedConf;
         // next
@@ -186,7 +184,9 @@ router.post('/release', jsonParser, function(req, res) {
                 FB.setAccessToken(data.shop.token);
                 // post feed
                 FB.api(`${data.shop.page_id}/${data.type}`, 'POST', data.feedConf, response => {
-                    console.log(response);
+                    // save result
+                    data.fbApiRes = response;
+                    // next process
                     (response || {}).error ? reject({
                         code    : 400,
                         message : `post.failed.${(response.error || {}).message}`
@@ -204,13 +204,14 @@ router.post('/release', jsonParser, function(req, res) {
                     title         : data.feedConf.title,
                     description   : data.feedConf.description,
                     scheduledTime : data.feedConf.scheduled_publish_time || null
-                }).then((res) => {
-                    console.log('res: ', res);
+                }).then((result) => {
+                    // save result
+                    data.fbApiRes = result;
                     // success?
-                    res.success ? resolve(res.video_id) : reject({ code : 400, message : `video.upload.known.error`});
+                    result.success ? resolve(result.video_id) : reject({ code : 400, message : `video.upload.known.error`});
                 }).catch((e) => {
                     console.log("====> upload err: ", e);
-                    reject({ code : 400, message : `video.upload.error.${e}`})
+                    reject({ code : 400, message : `video.upload.error:${e}`})
                 });
             }
         } else {
@@ -226,7 +227,9 @@ router.post('/release', jsonParser, function(req, res) {
             if(data.feedConf.scheduled_publish_time) params.scheduled_publish_time =  data.feedConf.scheduled_publish_time;
             // update post
             FB.api(`/${data.facebookFeed.fb_id}`, 'POST', params, response => {
-                console.log(response);
+                // save response
+                data.fbApiRes = response;
+                // next process
                 (response || {}).error ? reject({
                     code    : 400,
                     message : `post.failed.${(response.error || {}).message}`
@@ -252,6 +255,17 @@ router.post('/release', jsonParser, function(req, res) {
             resolve();
         }
     }))
+    // save log
+    .then(() => db.query(
+        "INSERT INTO `logs` (`feed_id`, `shop_id`, `log_result`, `log_action`, `log_response_context`) VALUES (?,?,?,?,?)",
+        [
+            req.body.feed, 
+            data.article.shop.id, 
+            'SUCCESS', 
+            data.facebookFeed ? 'UPDATE' : 'CREATE', 
+            !/^string$/i.test(typeof data.fbApiRes) ? JSON.stringify(data.fbApiRes) : data.fbApiRes
+        ]
+    ))
     // all process has finished
     .then(() => res.status(200).json({
         result   : true,
@@ -259,11 +273,28 @@ router.post('/release', jsonParser, function(req, res) {
     }))
     // any error?
     .catch(err => {
-        console.log(err);
-        res.status(err.code || 500).json({
+        // create log
+        db.query(
+            "INSERT INTO `logs` (`feed_id`, `shop_id`, `log_result`, `log_action`, `log_response_context`) VALUES (?,?,?,?,?)",
+            [
+                req.body.feed, 
+                data.article.shop.id, 
+                'FAILED', 
+                data.facebookFeed ? 'UPDATE' : 'CREATE', 
+                !/^string$/i.test(typeof err) ? JSON.stringify(err) : err
+            ]
+        )
+        // response
+        .then(result => res.status(401).json({
             result   : false,
-            messages : [err.message || err]
-        })
+            messages : `post.failed`
+        }))
+        // db error
+        .catch(error => {
+            res.status(500).json({
+            result   : false,
+            messages : `save.error.failed:${error}`
+        })});
     });
 });
 
