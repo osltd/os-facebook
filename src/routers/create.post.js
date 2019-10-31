@@ -302,7 +302,25 @@ router.post('/release', jsonParser, function(req, res) {
 
 
 
-router.post('/async-release', jsonParser, function(req, res) {
+/**
+ *      --------- Do upload after response ---------
+ */
+router.post('/pre-publish', jsonParser, function(req, res){
+    // response first
+    res.status(200).end('posted.');
+    // release
+    request({
+        url      : config.APP.URL + '/publish',
+        method   : 'POST',
+        headers : {
+            'Content-Type'  : 'application/json',
+        },
+        body     : JSON.stringify({feed:req.body.feed})
+    }, (error, resp, body) => {});
+});
+
+
+router.post('/publish', jsonParser, function(req, res) {
     // setup data process container
     var data = {};
 
