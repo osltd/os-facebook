@@ -297,3 +297,6 @@ router.post('/release', jsonParser, function(req, res) {
         })});
     });
 });
+
+
+module.exports = router;
