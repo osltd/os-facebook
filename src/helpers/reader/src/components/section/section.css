@@ -1,0 +1,36 @@
+.section .media{
+    width : 100%;
+    height : auto;
+}
+
+.section .media img{
+    width : 100%;
+    height : 100%;
+    object-fit: auto;
+}
+
+.section .media video{
+    width : 100%;
+    height : auto;
+}
+
+.section .title{
+    margin-top : 1.5em;
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+.section .title:first-child{
+    margin-top:2em;
+}
+
+.section .description{
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.section .tags{
+    font-size: 0.85em;
+    color: #333333;
+    margin-bottom : 2.5em;
+}

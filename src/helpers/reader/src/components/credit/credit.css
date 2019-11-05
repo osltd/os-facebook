@@ -1,0 +1,13 @@
+.credit {
+    margin-top: 2em;
+    font-size: 0.8em;
+}
+
+.credit a{
+    color: black;
+}
+
+.credit a img{
+    margin-left:5px;
+    height: 15px;
+}

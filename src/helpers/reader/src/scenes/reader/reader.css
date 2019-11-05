@@ -1,0 +1,14 @@
+.wrapper{
+    display : flex;
+    flex : 1;
+    flex-direction: column;
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1em;
+}
+
+.content{
+    flex : 1;
+    margin-top:1em;
+}
