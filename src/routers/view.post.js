@@ -37,7 +37,8 @@ router.get('/articles/:article_id', (req, res) => {
     // get thumbnail data
     .then(() => new Promise((resolve, reject) => {
         // get thumbnail
-        const thumb = ((((article || {}).sections || []).shift() || {}).media || []).filter(m => /^(jpe?g|png|svg|git|bmp)$/i.test(m.ext))[0] || null;
+        const thumb = ((((article || {}).sections || []).shift() || {}).media || []).filter(m => /^(jpe?g|png|svg|git|bmp|gif)$/i.test(m.ext))[0] || null;
+        console.log(thumb);
         if (!thumb) {
             resolve();
         } else {
@@ -72,7 +73,7 @@ router.get('/articles/:article_id', (req, res) => {
             ].join('') : ''
         };
         // inject data
-        Object.keys(replacements).forEach(field => html = html.replace(`{{__${field.toUpperCase()}__}}`, replacements[field]));
+        Object.keys(replacements).forEach(field => html = html.replace(new RegExp(`{{__${field.toUpperCase()}__}}`, 'g'), replacements[field]));
         // set header
         res.setHeader('content-type', 'text/html');
         // output
@@ -88,7 +89,7 @@ router.get('/articles/:article_id', (req, res) => {
 
 // load assets of the file
 router.get('/static/:filePath([a-zA-Z0-9\.\/]+)', (req, res) => fs.readFile(`${__dirname}/../helpers/reader/build/static/${req.params.filePath}`, (err, data) => {
-    let contentType = {
+    let contentTypes = {
         js  : 'text/javascript',
         css : 'text/css',
         png : 'image/png',
@@ -99,7 +100,7 @@ router.get('/static/:filePath([a-zA-Z0-9\.\/]+)', (req, res) => fs.readFile(`${_
         qt  : 'video/qt'
     }
     // set header
-    res.setHeader('content-type', contentType[req.params.filePath.split('.').pop()] || 'text/*');
+    res.setHeader('content-type', contentTypes[req.params.filePath.split('.').pop()] || 'text/*');
     // output
     res.status(err ? 404 : 200).end(err ? `File not found.` : data.toString());
 }))
