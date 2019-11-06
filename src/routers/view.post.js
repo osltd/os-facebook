@@ -4,7 +4,6 @@
 const express           = require('express');
 const router            = express.Router();
 const request           = require('request');
-const h2p               = require('html2plaintext');
 const requestImageSize  = require('request-image-size');
 const config            = require('../constants/config');
 const fs                = require('fs');
@@ -37,8 +36,7 @@ router.get('/articles/:article_id', (req, res) => {
     // get thumbnail data
     .then(() => new Promise((resolve, reject) => {
         // get thumbnail
-        const thumb = ((((article || {}).sections || []).shift() || {}).media || []).filter(m => /^(jpe?g|png|svg|git|bmp|gif)$/i.test(m.ext))[0] || null;
-        console.log(thumb);
+        const thumb = ((((article || {}).sections || [])[0] || {}).media || []).filter(m => /^(jpe?g|png|svg|git|bmp|gif)$/i.test(m.ext))[0] || null;
         if (!thumb) {
             resolve();
         } else {
@@ -63,9 +61,9 @@ router.get('/articles/:article_id', (req, res) => {
         // replacements
         let replacements = {
             article : JSON.stringify(article) || "{}",
-            title   : (((article || {}).sections || []).shift() || {}).title || 'Error: 404',
+            title   : (((article || {}).sections || [])[0] || {}).title || 'Error: 404',
             url     : `http://${req.hostname}/articles/${req.params.article_id}`,
-            desc    : (((article || {}).sections || []).shift() || {}).description || ' ',
+            desc    : (((article || {}).sections || [])[0] || {}).description || ' ',
             thumb   : thumb ? [
                 `<meta name="thumbnail" content="${thumb.src}"/>`,
                 `<meta property="og:image:width" content="${thumb.info.width}"/>`,
