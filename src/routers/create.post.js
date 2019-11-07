@@ -43,30 +43,39 @@ router.post('/pre-release', jsonParser, function(req, res){
 router.post('/release', jsonParser, function(req, res) {
     // setup data process container
     var data = {};
-
-    // fetch article
-    new Promise((resolve, reject) => request({
-        url: config.OS.ENDPOINT + '/articles?statuses=draft,published&ids=' + req.body.feed,
-        method: 'GET',
-        auth: {
-            'user': config.OS.ID,
-            'pass': config.OS.KEY
-        }
-    }, (error, resp, body) => {
-        let result = null, page = null;
-        try {result = JSON.parse(body)} catch(e) {result = null} finally {result = result || {}}
-        const article = ((result.data || {}).posts || []).shift() || {};
-        if((article.sections || []).length < 1){
-            reject({ code : 404, message : `article.notfound`})
-        } else {
-            console.log("=====> 1. article fetched");
-            // save article
-            data.article = article;
-            // next
-            resolve();
-        }
+    // setup get article method
+    var fetchArticleWithStatusnId = function(status, id){
+        console.log(`=====> Fetching ${status} posts...`);
+        // fetch articles
+        return new Promise((resolve, reject) => request({
+            url    : `${config.OS.ENDPOINT}/articles?statuses=${status}&ids=${id}`,
+            method : 'GET',
+            auth   : {
+                'user' : config.OS.ID,
+                'pass' : config.OS.KEY
+            }
+        }, (error, resp, body) => {
+            let result = null;
+            try {result = JSON.parse(body)} catch(e) {result = null} finally {result = result || {}}
+           resolve((result.data || {}).rows || []);
+        }));
+    };
+    // fetch published articles
+    new Promise((resolve, reject) => fetchArticleWithStatusnId('published', req.body.feed)
+    // no articles found? fetch scheduled articles
+    .then(rows => rows.length ? resolve(rows) : fetchArticleWithStatusnId('scheduled', req.body.feed).then(resolve)))
+    // got article
+    .then(rows => new Promise((resolve, reject) => {
+        // get article
+        const article = rows.shift() || {};
+        // save article
+        data.article = article;
+        // pass article
+        !(article.sections || []).length ? reject({
+            code    : 404,
+            message : 'page.not.found'
+        }) : resolve();
     }))
-
     // fetch shop info
     .then(() => new Promise((resolve, reject) => {
         // fetch shops
@@ -278,7 +287,7 @@ router.post('/release', jsonParser, function(req, res) {
             "INSERT INTO `logs` (`feed_id`, `shop_id`, `log_result`, `log_action`, `log_response_context`) VALUES (?,?,?,?,?)",
             [
                 req.body.feed, 
-                data.article.shop.id, 
+                ((data.article || {}).shop || {}).id || 0, 
                 'FAILED', 
                 data.facebookFeed ? 'UPDATE' : 'CREATE', 
                 !/^string$/i.test(typeof err) ? JSON.stringify(err) : err
