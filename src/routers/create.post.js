@@ -79,7 +79,7 @@ router.post('/release', jsonParser, function(req, res) {
     // fetch shop info
     .then(() => new Promise((resolve, reject) => {
         // fetch shops
-        db.query(`SELECT * FROM tokens WHERE shop_id = ?`, [data.article.shop.id])
+        db.query(`SELECT * FROM tokens WHERE shop_id = ? AND token_status = "ACTIVE"`, [data.article.shop.id])
         // 
         .then(rows  => {
              // no record
