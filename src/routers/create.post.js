@@ -228,20 +228,23 @@ router.post('/release', jsonParser, function(req, res) {
             FB.setAccessToken(data.shop.token);
             console.log('====> updating feed...');
             // setup payload
+            // var params = {
+            //   title       : data.feedConf.title,
+            //   description : data.feedConf.description
+            // };
             var params = {
-              title       : data.feedConf.title,
-              description : data.feedConf.description
-            };
+                description : data.feedConf.caption
+              };
             // set publish time
             //if(data.feedConf.scheduled_publish_time) params.scheduled_publish_time =  data.feedConf.scheduled_publish_time;
             // update post
             FB.api(`/${data.facebookFeed.fb_id}`, 'POST', params, response => {  
                 // save response
                 data.fbApiRes = response;
-                //console.log("====> data.facebookFeed.fb_id : ");
-                //console.log(data);
-                //console.log("====> params : ");
-                //console.log(params);
+                console.log("====> data.facebookFeed.fb_id : ");
+                console.log(data);
+                console.log("====> params : ");
+                console.log(params);
                 // next process
                 (response || {}).error ? reject({
                     code    : 400,
