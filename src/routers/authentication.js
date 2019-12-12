@@ -154,92 +154,96 @@ router.post('/shops/:shopId/pages', urlencodedParser, csrfProtection, (req, res)
                 res.end(Buffer.from(output));
             } else {
 
-                // // set present shop id token status to delete first
-                // new Promise((resolve, reject) => {
-                //     db.query(`UPDATE tokens SET token_status = "DELETED" WHERE shop_id = ?`, [shopId])
-                //     .then(resolve())
-                //     // db error?
-                //     .catch(err => {
-                //         // output result
-                //         res.set('Content-Type', 'text/html');
-                //         res.end(Buffer.from(output));
-                //     });
-                // })
-                // .then(() => new Promise((resolve, reject) => {
-                //     // save token info
-                //     db.query("REPLACE INTO `tokens` (`shop_id`,`page_id`,`token`,`token_status`) VALUES (?, ?, ?, ?)", [shopId, pageId, token, "ACTIVE"])
-                //     .then((res) => {
-                //         // success
-                //         if(res.affectedRows){
-                //             // set output
-                //             output = '<html>' +
-                //                 '<head>' +
-                //                     '<meta charset="utf-8"/>' +
-                //                     '<title>Matching...</title>' +
-                //                 '</head>' +
-                //                 '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
-                //                     '<p style="color: #808080;">All set. This window will automatically close in <span id="countdown" style="color: #fb9e9e; font-weight: 600;">5</span>s.</p>' +
-                //                     '<a style="display: inline-block; background-color: #3257a3;color: #fff; padding: 3px 20px; text-decoration: none; border-radius: 5px;" href="javascript:window.close();">Done</a>' +
-                //                     '<script>' +
-                //                         'var timer = setInterval(function() {' +
-                //                             'var current = parseInt(document.getElementById("countdown").innerText);' +
-                //                             '--current < 1 ? window.close() : (document.getElementById("countdown").innerText = current);' +
-                //                         '}, 1000);' +
-                //                     '</script>' +
-                //                 '</body>' +
-                //             '</html>';
-                //         }
-                //         // output result
-                //         res.set('Content-Type', 'text/html');
-                //         res.end(Buffer.from(output));
-                //     })
-                //     // db error?
-                //     .catch(err => {
-                //         // output result
-                //         res.set('Content-Type', 'text/html');
-                //         res.end(Buffer.from(output));
-                //     });
-                // }))
-                // // db error?
-                // .catch(err => {
-                //     // output result
-                //     res.set('Content-Type', 'text/html');
-                //     res.end(Buffer.from(output));
-                // });
-
-                // save token info
-                db.query("REPLACE INTO `tokens` (`shop_id`,`page_id`,`token`) VALUES (?, ?, ?)", [shopId, pageId, token])
-                .then((res) => {
-                    // success
-                    if(res.affectedRows){
-                        // set output
-                        output = '<html>' +
-                            '<head>' +
-                                '<meta charset="utf-8"/>' +
-                                '<title>Matching...</title>' +
-                            '</head>' +
-                            '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
-                                '<p style="color: #808080;">All set. This window will automatically close in <span id="countdown" style="color: #fb9e9e; font-weight: 600;">5</span>s.</p>' +
-                                '<a style="display: inline-block; background-color: #3257a3;color: #fff; padding: 3px 20px; text-decoration: none; border-radius: 5px;" href="javascript:window.close();">Done</a>' +
-                                '<script>' +
-                                    'var timer = setInterval(function() {' +
-                                        'var current = parseInt(document.getElementById("countdown").innerText);' +
-                                        '--current < 1 ? window.close() : (document.getElementById("countdown").innerText = current);' +
-                                    '}, 1000);' +
-                                '</script>' +
-                            '</body>' +
-                        '</html>';
-                    }
-                    // output result
-                    res.set('Content-Type', 'text/html');
-                    res.end(Buffer.from(output));
+                
+                new Promise((resolve, reject) => {
+                    // fetch shops
+                    db.query(`SELECT * FROM tokens WHERE shop_id = ?`, [shopId])
+                    // fetch shop info
+                    .then(rows => resolve(rows))
+                    // db error
+                    .catch(reject);
                 })
+                .then(rows => new Promise((resolve, reject) => {
+                    // store query string for the case of found out the record
+                    var qry = `UPDATE tokens SET page_id = "${pageId}", token = "${token}"  WHERE shop_id = ${shopId}`;
+                    // store query string for the case of NOT found the record
+                    if ((rows || []).length < 1) {
+                        qry = `INSERT INTO tokens (shop_id, page_id, token) VALUES (${shopId}, "${pageId}", "${token}")`;
+                    }
+                    // save latest token info
+                    db.query(qry)
+                    .then((res) => {
+                        // success
+                        if(res.affectedRows){
+                            // set output
+                            output = '<html>' +
+                                '<head>' +
+                                    '<meta charset="utf-8"/>' +
+                                    '<title>Matching...</title>' +
+                                '</head>' +
+                                '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
+                                    '<p style="color: #808080;">All set. This window will automatically close in <span id="countdown" style="color: #fb9e9e; font-weight: 600;">5</span>s.</p>' +
+                                    '<a style="display: inline-block; background-color: #3257a3;color: #fff; padding: 3px 20px; text-decoration: none; border-radius: 5px;" href="javascript:window.close();">Done</a>' +
+                                    '<script>' +
+                                        'var timer = setInterval(function() {' +
+                                            'var current = parseInt(document.getElementById("countdown").innerText);' +
+                                            '--current < 1 ? window.close() : (document.getElementById("countdown").innerText = current);' +
+                                        '}, 1000);' +
+                                    '</script>' +
+                                '</body>' +
+                            '</html>';
+                        }
+                        // output result
+                        res.set('Content-Type', 'text/html');
+                        res.end(Buffer.from(output));
+                    })
+                    // db error?
+                    .catch(err => {
+                        // output result
+                        res.set('Content-Type', 'text/html');
+                        res.end(Buffer.from(output));
+                    });
+                }))
                 // db error?
                 .catch(err => {
                     // output result
                     res.set('Content-Type', 'text/html');
                     res.end(Buffer.from(output));
                 });
+
+                // save token info
+                // db.query("REPLACE INTO `tokens` (`shop_id`,`page_id`,`token`) VALUES (?, ?, ?)", [shopId, pageId, token])
+                // .then((res) => {
+                //     // success
+                //     if(res.affectedRows){
+                //         // set output
+                //         output = '<html>' +
+                //             '<head>' +
+                //                 '<meta charset="utf-8"/>' +
+                //                 '<title>Matching...</title>' +
+                //             '</head>' +
+                //             '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
+                //                 '<p style="color: #808080;">All set. This window will automatically close in <span id="countdown" style="color: #fb9e9e; font-weight: 600;">5</span>s.</p>' +
+                //                 '<a style="display: inline-block; background-color: #3257a3;color: #fff; padding: 3px 20px; text-decoration: none; border-radius: 5px;" href="javascript:window.close();">Done</a>' +
+                //                 '<script>' +
+                //                     'var timer = setInterval(function() {' +
+                //                         'var current = parseInt(document.getElementById("countdown").innerText);' +
+                //                         '--current < 1 ? window.close() : (document.getElementById("countdown").innerText = current);' +
+                //                     '}, 1000);' +
+                //                 '</script>' +
+                //             '</body>' +
+                //         '</html>';
+                //     }
+                //     // output result
+                //     res.set('Content-Type', 'text/html');
+                //     res.end(Buffer.from(output));
+                // })
+                // // db error?
+                // .catch(err => {
+                //     // output result
+                //     res.set('Content-Type', 'text/html');
+                //     res.end(Buffer.from(output));
+                // });
 
             }
         });
