@@ -79,7 +79,8 @@ router.post('/release', jsonParser, function(req, res) {
     // fetch shop info
     .then(() => new Promise((resolve, reject) => {
         // fetch shops
-        db.query(`SELECT * FROM tokens WHERE shop_id = ? AND token_status = "ACTIVE"`, [data.article.shop.id])
+        //db.query(`SELECT * FROM tokens WHERE shop_id = ? AND token_status = "ACTIVE"`, [data.article.shop.id])
+        db.query(`SELECT * FROM tokens WHERE shop_id = ?`, [data.article.shop.id])
         // 
         .then(rows  => {
              // no record
@@ -169,7 +170,7 @@ router.post('/release', jsonParser, function(req, res) {
         }
         // append hashtag
         if((((data.article.sections || [])[0] || {}).tags || []).length > 0) 
-            feedConf[typeof feedConf.caption != 'undefined' ? 'caption' : 'message'] += "\n\n#" + data.article.tags.join(' #');
+            feedConf[typeof feedConf.caption != 'undefined' ? 'caption' : 'message'] += "\n\n#" + data.article.tags.join(' #');    
         // need to set schedule?
         if(new Date(data.article.time).getTime() > new Date().getTime()) {
             feedConf.published = false;
@@ -237,14 +238,16 @@ router.post('/release', jsonParser, function(req, res) {
               };
             // set publish time
             //if(data.feedConf.scheduled_publish_time) params.scheduled_publish_time =  data.feedConf.scheduled_publish_time;
+            // ---- HHH
+            console.log(`Time for Post : ${data.article.time}`);
             // update post
             FB.api(`/${data.facebookFeed.fb_id}`, 'POST', params, response => {  
                 // save response
                 data.fbApiRes = response;
-                console.log("====> data.facebookFeed.fb_id : ");
-                console.log(data);
-                console.log("====> params : ");
-                console.log(params);
+                // console.log("====> data.facebookFeed.fb_id : ");
+                // console.log(data);
+                // console.log("====> params : ");
+                // console.log(params);
                 // next process
                 (response || {}).error ? reject({
                     code    : 400,
