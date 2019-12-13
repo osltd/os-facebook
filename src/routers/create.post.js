@@ -271,7 +271,7 @@ router.post('/release', jsonParser, function(req, res) {
             //         code    : 400,
             //         message : `post.failed.${(response.error || {}).message}`
             //     }) : resolve(response.id);
-            });
+            // });
         }
     }))
     // save post info
