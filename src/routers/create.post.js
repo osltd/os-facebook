@@ -259,10 +259,10 @@ router.post('/release', jsonParser, function(req, res) {
             FB.api(`/${data.facebookFeed.fb_id}`, 'POST', params, response => {  
                 // save response
                 data.fbApiRes = response;
-                console.log("====> data.facebookFeed.fb_id : ");
-                console.log(data);
-                console.log("====> params : ");
-                console.log(params);
+                //console.log("====> data.facebookFeed.fb_id : ");
+                //console.log(data);
+                //console.log("====> params : ");
+                //console.log(params);
                 // next process
                 (response || {}).error ? reject({
                     code    : 400,
