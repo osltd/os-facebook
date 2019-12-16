@@ -307,15 +307,46 @@ router.post('/release', jsonParser, function(req, res) {
     }))
     // any error?
     .catch(err => {
+        // Check the error log of authorized access token
+        // Error validating access token: The user has not authorized application
+        var shopIdVal = ((data.article || {}).shop || {}).id || 0;
+        var errStr = !/^string$/i.test(typeof err) ? JSON.stringify(err) : err;
+        if(errStr.includes("Error validating access token: The user has not authorized application")) {
+            // update shop status (Change shop status back to "DRAFT" state if the related token invalid)
+            request({
+                url: config.OS.ENDPOINT + '/shops/' + shopIdVal,
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                auth: {
+                    'user': config.OS.ID,
+                    'pass': config.OS.KEY
+                },
+                body: JSON.stringify({
+                    status: 'DRAFT'
+                })
+            }, (error, resp, body) => {
+                // setup result container
+                var result = null;
+                // parse result
+                try {result = JSON.parse(body)} catch(e) {result = null} finally {result = result || {}}
+                // shop status updated
+                if (result.result) {
+                }
+            }); 
+        }
         // create log
         db.query(
             "INSERT INTO `logs` (`feed_id`, `shop_id`, `log_result`, `log_action`, `log_response_context`) VALUES (?,?,?,?,?)",
             [
                 req.body.feed, 
-                ((data.article || {}).shop || {}).id || 0, 
+                //((data.article || {}).shop || {}).id || 0, 
+                shopIdVal,
                 'FAILED', 
                 data.facebookFeed ? 'UPDATE' : 'CREATE', 
-                !/^string$/i.test(typeof err) ? JSON.stringify(err) : err
+                //!/^string$/i.test(typeof err) ? JSON.stringify(err) : err
+                errStr
             ]
         )
         // response
