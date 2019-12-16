@@ -49,6 +49,8 @@ router.post('/release', jsonParser, function(req, res) {
         // fetch articles
         return new Promise((resolve, reject) => request({
             url    : `${config.OS.ENDPOINT}/articles?statuses=${status}&ids=${id}`,
+            // HHH Test
+            //url    : `${config.OS.ENDPOINT}/articles?ids=${id}`,
             method : 'GET',
             auth   : {
                 'user' : config.OS.ID,
@@ -170,6 +172,9 @@ router.post('/release', jsonParser, function(req, res) {
         // append hashtag
         if((((data.article.sections || [])[0] || {}).tags || []).length > 0) 
             feedConf[typeof feedConf.caption != 'undefined' ? 'caption' : 'message'] += "\n\n#" + data.article.tags.join(' #');    
+        
+        // HHH Test
+        // Test with specified schedule    
         // need to set schedule?
         if(new Date(data.article.time).getTime() > new Date().getTime()) {
             feedConf.published = false;
@@ -226,52 +231,44 @@ router.post('/release', jsonParser, function(req, res) {
         } else {
             // connect fb
             FB.setAccessToken(data.shop.token);
+            // connect fb
+            FB.setAccessToken(data.shop.token);
             console.log('====> updating feed...');
-            // setup payload
-            var params = {
-              title       : data.feedConf.title,
-              description : data.feedConf.description
-            };
-            // set publish time
-            if(data.feedConf.scheduled_publish_time) params.scheduled_publish_time =  data.feedConf.scheduled_publish_time;
+            //setup payload
+            var params = {};
+            switch (data.type) {
+                case 'feed':
+                    params = {message : data.feedConf.message};
+                    break;
+                case 'photos':
+                    params = {
+                        // Not solve this case yet
+                        caption : data.feedConf.caption
+                    };
+                    break;
+                case 'videos':
+                    params = {
+                        title       : data.feedConf.title,
+                        description : data.feedConf.description
+                    };
+                    break;
+                default:
+                    break;    
+            }
             // update post
             FB.api(`/${data.facebookFeed.fb_id}`, 'POST', params, response => {  
                 // save response
                 data.fbApiRes = response;
+                console.log("====> data.facebookFeed.fb_id : ");
+                console.log(data);
+                console.log("====> params : ");
+                console.log(params);
                 // next process
                 (response || {}).error ? reject({
                     code    : 400,
                     message : `post.failed.${(response.error || {}).message}`
                 }) : resolve(response.id);
             });
-
-            // // connect fb
-            // FB.setAccessToken(data.shop.token);
-            // console.log('====> updating feed...');
-            // // setup payload
-            // var params = {
-            //   title       : data.feedConf.title,
-            //   description : data.feedConf.description
-            // };
-            // // var params = {
-            // //     description : data.feedConf.caption
-            // //   };
-            // // set publish time
-            // if(data.feedConf.scheduled_publish_time) params.scheduled_publish_time =  data.feedConf.scheduled_publish_time;
-            // // update post
-            // FB.api(`/${data.facebookFeed.fb_id}`, 'POST', data.feedConf, response => {  
-            //     // save response
-            //     data.fbApiRes = response;
-            //     console.log("====> data.facebookFeed.fb_id : ");
-            //     console.log(data);
-            //     console.log("====> params : ");
-            //     console.log(params);
-            //     // next process
-            //     (response || {}).error ? reject({
-            //         code    : 400,
-            //         message : `post.failed.${(response.error || {}).message}`
-            //     }) : resolve(response.id);
-            // });
         }
     }))
     // save post info
