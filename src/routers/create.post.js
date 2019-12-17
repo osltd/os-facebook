@@ -308,7 +308,6 @@ router.post('/release', jsonParser, function(req, res) {
     // any error?
     .catch(err => {
         // Check the error log of authorized access token
-        // Error validating access token: The user has not authorized application
         var shopIdVal = ((data.article || {}).shop || {}).id || 0;
         var errStr = !/^string$/i.test(typeof err) ? JSON.stringify(err) : err;
         if(errStr.includes("Error validating access token: The user has not authorized application")) {
