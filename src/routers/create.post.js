@@ -198,8 +198,15 @@ router.post('/release', jsonParser, function(req, res) {
                 FB.setAccessToken(data.shop.token);
                 // post feed
                 FB.api(`${data.shop.page_id}/${data.type}`, 'POST', data.feedConf, response => {
+                    console.log("====> data.facebookFeed.fb_id (Create) : ");
+                    console.log(response);
                     // save result
                     data.fbApiRes = response;
+                    // Photo Result :
+                    //{ id: '118450802970145',
+                    //post_id: '112470303568195_118450802970145' }
+                    // Msg Result :
+                    //{ id: '112470303568195_118451569636735' }
                     // next process
                     (response || {}).error ? reject({
                         code    : 400,
@@ -259,10 +266,10 @@ router.post('/release', jsonParser, function(req, res) {
             FB.api(`/${data.facebookFeed.fb_id}`, 'POST', params, response => {  
                 // save response
                 data.fbApiRes = response;
-                //console.log("====> data.facebookFeed.fb_id : ");
-                //console.log(data);
-                //console.log("====> params : ");
-                //console.log(params);
+                console.log("====> data.facebookFeed.fb_id : ");
+                console.log(data);
+                console.log("====> params : ");
+                console.log(params);
                 // next process
                 (response || {}).error ? reject({
                     code    : 400,
