@@ -183,7 +183,7 @@ router.post('/shops/:shopId/pages', urlencodedParser, csrfProtection, (req, res)
                                     '<title>Matching...</title>' +
                                 '</head>' +
                                 '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
-                                    '<p style="color: #808080;">All set. This window will automatically close in <span id="countdown" style="color: #fb9e9e; font-weight: 600;">5</span>s.</p>' +
+                                    '<p style="color: #808080;">All set. This window will automatically back to panel in <span id="countdown" style="color: #fb9e9e; font-weight: 600;">5</span>s.</p>' +
                                     `<a style="display: inline-block; background-color: #3257a3;color: #fff; padding: 3px 20px; text-decoration: none; border-radius: 5px;" href="javascript:location.replace('${redirectUrl}');">Done</a>` +
                                     '<script>' +
                                         'var timer = setInterval(function() {' +
