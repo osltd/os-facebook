@@ -55,38 +55,228 @@ router.get('/pages', passport.authenticate('facebook',{failureRedirect:'/login'}
         }
     }))
     .then(shop => FB.api('me/accounts', result => {
+
+        var headerStyle = `
+        <style>
+                /*the container must be positioned relative:*/
+                .custom-select {
+                  position: relative;
+                  font-size: 14px;
+                }
+                
+                .custom-select select {
+                  display: none; /*hide original SELECT element:*/
+                }
+                
+                .select-selected {
+                  background-color: white;
+                }
+                
+                /*style the arrow inside the select element:*/
+                .select-selected:after {
+                  position: absolute;
+                  content: "";
+                  top: 14px;
+                  right: 10px;
+                  width: 0;
+                  height: 0;
+                  border: 6px solid transparent;
+                  border-color: #000 transparent transparent transparent;
+                }
+                
+                /*point the arrow upwards when the select box is open (active):*/
+                .select-selected.select-arrow-active:after {
+                  border-color: transparent transparent #fff transparent;
+                  top: 7px;
+                }
+                
+                /*style the items (options), including the selected item:*/
+                .select-items div {
+                  color: #000000;
+                  padding: 8px 16px;
+                  border: 1px solid transparent;
+                  
+                  cursor: pointer;
+                  user-select: none;
+                }
+                
+                .select-selected {
+                  color: #000000;
+                  padding: 8px 16px;
+                  border: 1px solid transparent;
+                  border-color: rgba(0, 0, 0, 0.1);
+                  border-radius: 2px;
+                  cursor: pointer;
+                  user-select: none;
+                }
+                
+                /*style items (options):*/
+                .select-items {
+                  position: absolute;
+                  background-color: white;
+                  top: 100%;
+                  left: 0;
+                  right: 0;
+                  z-index: 99;
+                }
+                
+                /*hide the items when the select box is closed:*/
+                .select-hide {
+                  display: none;
+                }
+                
+                .select-items div:hover, .same-as-selected {
+                  background-color: rgba(0, 0, 0, 0.1);
+                }
+        </style>
+        `;
+
+        var contentScript = `
+        <script>
+                var x, i, j, selElmnt, a, b, c;
+                /*look for any elements with the class "custom-select":*/
+                x = document.getElementsByClassName("custom-select");
+                for (i = 0; i < x.length; i++) {
+                  selElmnt = x[i].getElementsByTagName("select")[0];
+                  /*for each element, create a new DIV that will act as the selected item:*/
+                  a = document.createElement("DIV");
+                  a.setAttribute("class", "select-selected");
+                  a.innerHTML = selElmnt.options[selElmnt.selectedIndex].innerHTML;
+                  x[i].appendChild(a);
+                  /*for each element, create a new DIV that will contain the option list:*/
+                  b = document.createElement("DIV");
+                  b.setAttribute("class", "select-items select-hide");
+                  for (j = 1; j < selElmnt.length; j++) {
+                    /*for each option in the original select element,
+                    create a new DIV that will act as an option item:*/
+                    c = document.createElement("DIV");
+                    c.innerHTML = selElmnt.options[j].innerHTML;
+                    c.addEventListener("click", function(e) {
+                        /*when an item is clicked, update the original select box,
+                        and the selected item:*/
+                        var y, i, k, s, h;
+                        s = this.parentNode.parentNode.getElementsByTagName("select")[0];
+                        h = this.parentNode.previousSibling;
+                        for (i = 0; i < s.length; i++) {
+                          if (s.options[i].innerHTML == this.innerHTML) {
+                            s.selectedIndex = i;
+                            h.innerHTML = this.innerHTML;
+                            y = this.parentNode.getElementsByClassName("same-as-selected");
+                            for (k = 0; k < y.length; k++) {
+                              y[k].removeAttribute("class");
+                            }
+                            this.setAttribute("class", "same-as-selected");
+                            break;
+                          }
+                        }
+                        h.click();
+                    });
+                    b.appendChild(c);
+                  }
+                  x[i].appendChild(b);
+                  a.addEventListener("click", function(e) {
+                      /*when the select box is clicked, close any other select boxes,
+                      and open/close the current select box:*/
+                      e.stopPropagation();
+                      closeAllSelect(this);
+                      this.nextSibling.classList.toggle("select-hide");
+                      this.classList.toggle("select-arrow-active");
+                    });
+                }
+                function closeAllSelect(elmnt) {
+                  /*a function that will close all select boxes in the document,
+                  except the current select box:*/
+                  var x, y, i, arrNo = [];
+                  x = document.getElementsByClassName("select-items");
+                  y = document.getElementsByClassName("select-selected");
+                  for (i = 0; i < y.length; i++) {
+                    if (elmnt == y[i]) {
+                      arrNo.push(i)
+                    } else {
+                      y[i].classList.remove("select-arrow-active");
+                    }
+                  }
+                  for (i = 0; i < x.length; i++) {
+                    if (arrNo.indexOf(i)) {
+                      x[i].classList.add("select-hide");
+                    }
+                  }
+                }
+                /*if the user clicks anywhere outside the select box,
+                then close all select boxes:*/
+                document.addEventListener("click", closeAllSelect);
+        </script>
+        `;
+
         res.set('Content-Type', 'text/html');
+        // res.end(Buffer.from('<html>' +
+        //     '<head>' +
+        //         '<meta charset="utf-8"/>' +
+        //         '<title>Pairing</title>' +
+        //     '</head>' +
+        //     '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
+        //         '<p style="margin: 0 auto; color: #808080;">Please select the facebook page that you want to connect with OneShop.</p>' +
+        //         '<form' +
+        //             ' style="display: flex; flex-direction: row; align-items: center; justify-content: center; padding: 0; margin: 20px 0 0;"' +
+        //             ' action="/shops/' + (shop.id || 0)+ '/pages"' +
+        //             ' method="POST"' +
+        //         '>' +
+        //             '<div style="display: flex; justify-content: center; align-items: center;">' +
+        //                 `<img src="${(shop.logo || "").length > 0 ? shop.logo : (shop.channel || {}).logo}" height="25"/>` +
+        //                 '&nbsp;&nbsp;' +
+        //                 '<b>' + (shop.name || "") + '</b>' +
+        //                 '<input type="hidden" name="_csrf" value="' + req.csrfToken() + '">' +
+        //             '</div>' +
+        //             '<div style="margin: 0 10px;"> => </div>' +
+        //             '<div>' +
+        //                 '<select' +
+        //                     ' name="page"' +
+        //                     ' onchange="!(!this.value && alert()) && this.form.submit()"' +
+        //                 '>' +
+        //                     '<option value="">-- Please Select --</option>' +
+        //                     ((result || {}).data || []).map(p => {
+        //                         return '<option value="' + p.id + ':' + p.access_token + '">' + p.name + '</option>';
+        //                     }).join('') +
+        //                 '</select>' +
+        //             '</div>' +
+        //         '</form>' +
+        //     '</body>' +
+        // '</html>'));
+
         res.end(Buffer.from('<html>' +
             '<head>' +
                 '<meta charset="utf-8"/>' +
                 '<title>Pairing</title>' +
+                headerStyle +
             '</head>' +
-            '<body style="margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; height: 100%;">' +
-                '<p style="margin: 0 auto; color: #808080;">Please select the facebook page that you want to connect with OneShop.</p>' +
-                '<form' +
-                    ' style="display: flex; flex-direction: row; align-items: center; justify-content: center; padding: 0; margin: 20px 0 0;"' +
-                    ' action="/shops/' + (shop.id || 0)+ '/pages"' +
-                    ' method="POST"' +
-                '>' +
-                    '<div style="display: flex; justify-content: center; align-items: center;">' +
-                        `<img src="${(shop.logo || "").length > 0 ? shop.logo : (shop.channel || {}).logo}" height="25"/>` +
-                        '&nbsp;&nbsp;' +
-                        '<b>' + (shop.name || "") + '</b>' +
-                        '<input type="hidden" name="_csrf" value="' + req.csrfToken() + '">' +
-                    '</div>' +
-                    '<div style="margin: 0 10px;"> => </div>' +
-                    '<div>' +
-                        '<select' +
-                            ' name="page"' +
-                            ' onchange="!(!this.value && alert()) && this.form.submit()"' +
-                        '>' +
-                            '<option value="">-- Please Select --</option>' +
-                            ((result || {}).data || []).map(p => {
-                                return '<option value="' + p.id + ':' + p.access_token + '">' + p.name + '</option>';
-                            }).join('') +
-                        '</select>' +
-                    '</div>' +
-                '</form>' +
+            '<body style="margin: 0; padding: 0; display: flex;  align-items: center; flex-direction: column; height: 100%; background-color: #885FBD; font-family:  Arial, Helvetica, sans-serif;">' +
+                '<div style="background-color: #eeeeee; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 60px 30px 60px; margin: 100px 0 0;">' + 
+                    '<img src="https://oneshop.cloud/assets/img/logo.png" style="width:150px;height:auto; margin: 0px 0px 40px 0px;" />' + 
+                    '<b style="margin: 0 auto; color: black; font-size: 16px; width:400px; text-align: center;">Please select the facebook page that you want to connect with OneShop.</b>' +
+                    '<form' +
+                        ' style="margin: 0;"' +
+                        ' action="/shops/' + (shop.id || 0)+ '/pages"' +
+                        ' method="POST"' +
+                    '>' +
+                        '<div style="display: flex; justify-content: center; align-items: center;">' +
+                            `<img src="" height="25"/>` +
+                            '&nbsp;&nbsp;' +
+                            '<input type="hidden" name="_csrf" value="' + req.csrfToken() + '">' +
+                        '</div>' +
+                        '<div class="custom-select" style="width:260px;">' +
+                            '<select' +
+                                ' name="page"' +
+                                ' onchange="!(!this.value && alert()) && this.form.submit()"' +
+                            '>' +
+                                '<option value="">-- Please Select --</option>' +
+                                ((result || {}).data || []).map(p => {
+                                    return '<option value="' + p.id + ':' + p.access_token + '">' + p.name + '</option>';
+                                }).join('') +
+                            '</select>' +
+                        '</div>' +
+                    '</form>' +
+                '</div>' +  
+                contentScript+  
             '</body>' +
         '</html>'));
     }))
