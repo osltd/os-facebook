@@ -181,6 +181,9 @@ router.get('/pages', passport.authenticate('facebook',{failureRedirect:'/login'}
                       closeAllSelect(this);
                       this.nextSibling.classList.toggle("select-hide");
                       this.classList.toggle("select-arrow-active");
+                      /*Check the current clicked selected items has value and then suto submit the form*/
+                      var selectfrm = document.getElementById("select_channel");
+                      if( !(selectfrm.value==="") ) { selectfrm.form.submit() };
                     });
                 }
                 function closeAllSelect(elmnt) {
@@ -265,6 +268,7 @@ router.get('/pages', passport.authenticate('facebook',{failureRedirect:'/login'}
                         '</div>' +
                         '<div class="custom-select" style="width:260px;">' +
                             '<select' +
+                                ' id="select_channel"' +
                                 ' name="page"' +
                                 ' onchange="!(!this.value && alert()) && this.form.submit()"' +
                             '>' +
