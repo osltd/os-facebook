@@ -254,7 +254,8 @@ router.get('/pages', passport.authenticate('facebook',{failureRedirect:'/login'}
             '</head>' +
             '<body style="margin: 0; padding: 0; display: flex;  align-items: center; flex-direction: column; height: 100%; background-color: #885FBD; font-family:  Arial, Helvetica, sans-serif;">' +
                 '<div style="background-color: #eeeeee; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 60px 30px 60px; margin: 100px 0 0;">' + 
-                    '<img src="https://oneshop.cloud/assets/img/logo.png" style="width:150px;height:auto; margin: 0px 0px 40px 0px;" />' + 
+                    //'<img src="https://oneshop.cloud/assets/img/logo.png" style="width:150px;height:auto; margin: 0px 0px 40px 0px;" />' + 
+                    '<img src="https://s3-ap-southeast-1.amazonaws.com/carlig.oneshop.cloud/oneshop-logo-black.png" style="width:150px;height:auto; margin: 0px 0px 40px 0px;" />' + 
                     '<b style="margin: 0 auto; color: black; font-size: 16px; width:400px; text-align: center;">Please select the facebook page that you want to connect with OneShop.</b>' +
                     '<form' +
                         ' style="margin: 0;"' +
