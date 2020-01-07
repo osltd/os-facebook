@@ -135,9 +135,9 @@ router.post('/release', jsonParser, function(req, res) {
             feedConf.link = config.APP.URL + '/articles/' + data.article.id;
         } else
         // image/video post
-        if ((data.article.sections[0].medias || []).length > 0) {
+        if ((data.article.sections[0].media || []).length > 0) {
             // get media url
-            var url = data.article.sections[0].medias[0].url;
+            var url = data.article.sections[0].media[0].url;
             // extract extension
             var extension = (url.split('?').shift() || '').split('.').pop();
             // image?
@@ -147,7 +147,7 @@ router.post('/release', jsonParser, function(req, res) {
                 // setup config data
                 feedConf.caption = h2p(data.article.sections[0].description || '');
                 // append link
-                feedConf.url = data.article.sections[0].medias[0].url;
+                feedConf.url = data.article.sections[0].media[0].url;
             } 
             // videos?
             else {
