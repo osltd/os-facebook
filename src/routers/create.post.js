@@ -304,7 +304,8 @@ router.post('/release', jsonParser, function(req, res) {
         // Check the error log of authorized access token
         var shopIdVal = ((data.article || {}).shop || {}).id || 0;
         var errStr = !/^string$/i.test(typeof err) ? JSON.stringify(err) : err;
-        if(errStr.includes("Error validating access token: The user has not authorized application")) {
+        if(errStr.includes("Error validating access token: The user has not authorized application") || 
+           errStr.includes("shop.not.found")) {
             // update shop status (Change shop status back to "DRAFT" state if the related token invalid)
             request({
                 url: config.OS.ENDPOINT + '/shops/' + shopIdVal,
